@@ -7,16 +7,17 @@ import re
 # VARIABLES
 ####################################################################################
 sources = [
-    "https://vcdx200.uw.cz/feeds/posts/default?max-results=500",
-    "https://linux.uw.cz/feeds/posts/default?max-results=500",
-    "https://freebsd.uw.cz/feeds/posts/default?max-results=500",
-    "https://itkb.uw.cz/feeds/posts/default?max-results=500",
-    "https://philosophy.uw.cz/feeds/posts/default?max-results=500",
-    "https://itc-bohemians.blogspot.com//feeds/posts/default?max-results=500"
+    "https://vcdx200.uw.cz/feeds/posts/default",
+    "https://linux.uw.cz/feeds/posts/default",
+    "https://freebsd.uw.cz/feeds/posts/default",
+    "https://itkb.uw.cz/feeds/posts/default",
+    "https://philosophy.uw.cz/feeds/posts/default",
+    "https://itc-bohemians.blogspot.com//feeds/posts/default"
 ]
 
 items = []
 max_items = 10000
+TITLE="Aggregated RSS feed from all uw.cz blogs"
 
 ####################################################################################
 # FUNCTIONS
@@ -36,14 +37,14 @@ def get_pubdate(entry):
 for base_url in sources:
     start = 1
     while True:
-        url = f"{base_url}&start-index={start}"
+        url = f"{base_url}?start-index={start}&max-results=50"
         feed = feedparser.parse(url)
 
         if not feed.entries:
             break
 
         items.extend(feed.entries)
-        start += 500
+        start += 50
 
 # Seřadit podle data publikace
 items.sort(key=lambda e: e.get("published_parsed", time.gmtime(0)), reverse=True)
@@ -52,7 +53,7 @@ items.sort(key=lambda e: e.get("published_parsed", time.gmtime(0)), reverse=True
 # --- Generate RSS feed ---
 #################################
 fg = FeedGenerator()
-fg.title("blog.uw.cz - aggregated RSS feed")
+fg.title(TITLE)
 fg.link(href="http://localhost/rss", rel="self")
 fg.description("Aggreagted RSS feed from all blog posts from uw.cz")
 
@@ -68,21 +69,21 @@ fg.rss_file("/usr/share/nginx/html/combined.xml")
 #################################
 # --- Generate HTML ---
 #################################
-html_content = """<!DOCTYPE html>
+html_content = f"""<!DOCTYPE html>
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<title>Aggreagted RSS feed from all uw.cz blogs</title>
+<title>{TITLE}</title>
 <style>
-body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; }
-h1 { text-align: center; }
-article { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ccc; }
-a { text-decoration: none; color: #0066cc; }
-a:hover { text-decoration: underline; }
+body {{ font-family: Arial, sans-serif; max-width: 800px; margin: auto; }}
+h1 {{ text-align: center; }}
+article {{ margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ccc; }}
+a {{ text-decoration: none; color: #0066cc; }}
+a:hover {{ text-decoration: underline; }}
 </style>
 </head>
 <body>
-<h1>Aggreagted RSS feed from all uw.cz blogs</h1>
+<h1>{TITLE}</h1>
 """
 
 article_id = 0
