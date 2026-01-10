@@ -57,6 +57,6 @@ services:
       pip install --no-cache-dir feedparser feedgen &&
       while true; do
           python feed.py;
-          sleep 10;
+          sleep 60;
       done
       "
