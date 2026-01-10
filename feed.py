@@ -41,7 +41,7 @@ html_content = """<!DOCTYPE html>
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<title>Aggreagted RSS feed from all uw.cz blogs/title>
+<title>Aggreagted RSS feed from all uw.cz blogs</title>
 <style>
 body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; }
 h1 { text-align: center; }
