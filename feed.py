@@ -3,6 +3,24 @@ from feedgen.feed import FeedGenerator
 import time
 import re
 
+####################################################################################
+# VARIABLES
+####################################################################################
+sources = [
+    "https://vcdx200.uw.cz/feeds/posts/default?max-results=500",
+    "https://linux.uw.cz/feeds/posts/default?max-results=500",
+    "https://freebsd.uw.cz/feeds/posts/default?max-results=500",
+    "https://itkb.uw.cz/feeds/posts/default?max-results=500",
+    "https://philosophy.uw.cz/feeds/posts/default?max-results=500",
+    "https://itc-bohemians.blogspot.com//feeds/posts/default?max-results=500"
+]
+
+items = []
+max_items = 10000
+
+####################################################################################
+# FUNCTIONS
+####################################################################################
 def get_pubdate(entry):
     if hasattr(entry, "published_parsed") and entry.published_parsed:
         return time.strftime("%Y-%m-%d", entry.published_parsed)
@@ -11,24 +29,10 @@ def get_pubdate(entry):
     return ""
 
 ####################################################################################
-# VARIABLES
-####################################################################################
-sources = [
-    "https://vcdx200.uw.cz/feeds/posts/default",
-    "https://linux.uw.cz/feeds/posts/default",
-    "https://freebsd.uw.cz/feeds/posts/default",
-    "https://itkb.uw.cz/feeds/posts/default",
-    "https://philosophy.uw.cz/feeds/posts/default",
-    "https://itc-bohemians.blogspot.com//feeds/posts/default"
-]
 
-items = []
-max_items = 1000
-
-####################################################################################
-
-####################################################################################
-
+#################################
+# --- Get items from RSS sources ---
+#################################B
 for url in sources:
     feed = feedparser.parse(url)
     for entry in feed.entries:
@@ -102,4 +106,3 @@ html_content += "</body>\n</html>"
 # Uložit do HTML souboru
 with open("/usr/share/nginx/html/index.html", "w", encoding="utf-8") as f:
     f.write(html_content)
-
