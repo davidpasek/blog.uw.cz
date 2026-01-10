@@ -1,0 +1,62 @@
+volumes:
+  certs:
+    driver: local
+ 
+networks:
+  web:
+    external: false
+ 
+services:
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    user: root 
+    networks:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certs:/usr/local/etc/haproxy/certs:ro
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    restart: unless-stopped
+
+  acme:
+    image: neilpang/acme.sh
+    container_name: acme
+    networks:
+      - web
+    volumes:
+      - certs:/acme.sh
+    environment:
+      - Active24_ApiKey=${Active24_ApiKey}                    # Active24 API Key
+      - Active24_ApiSecret=${Active24_ApiSecret}            # Active24 API Secret
+    command: daemon --foreground    
+    restart: unless-stopped
+
+  rss-nginx:
+    image: nginx:latest
+    container_name: rss-nginx
+    ports:
+      - "8080:80"
+    networks:
+      - web
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+  rss-generator:
+    image: python:3.12-slim
+    container_name: rss-generator
+    volumes:
+      - ./html:/usr/share/nginx/html
+      - ./feed.py:/app/feed.py
+    working_dir: /app
+    command: >
+      sh -c "
+      pip install --no-cache-dir feedparser feedgen &&
+      while true; do
+          python feed.py;
+          sleep 10;
+      done
+      "
