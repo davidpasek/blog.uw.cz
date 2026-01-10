@@ -6,6 +6,8 @@ import re
 ####################################################################################
 # VARIABLES - Can be changed to customize script behavior
 ####################################################################################
+
+# RSS Sources
 sources = [
     "https://vcdx200.uw.cz/feeds/posts/default",
     "https://linux.uw.cz/feeds/posts/default",
@@ -15,7 +17,7 @@ sources = [
     "https://itc-bohemians.blogspot.com//feeds/posts/default"
 ]
 
-max_items = 10000
+# Title to be used in generated files
 TITLE="Aggregated RSS feed from all uw.cz blogs"
 
 ####################################################################################
@@ -63,7 +65,7 @@ fg.title(TITLE)
 fg.link(href="http://localhost/rss", rel="self")
 fg.description("Aggreagted RSS feed from all blog posts from uw.cz")
 
-for entry in items[:max_items]:
+for entry in items:
     fe = fg.add_entry()
     fe.title(entry.title)
     fe.link(href=entry.link)
@@ -93,7 +95,7 @@ a:hover {{ text-decoration: underline; }}
 """
 
 article_id = 0
-for entry in items[:max_items]:
+for entry in items:
     article_id += 1
     title = entry.title
     link = entry.link
