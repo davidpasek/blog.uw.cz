@@ -4,7 +4,7 @@ import time
 import re
 
 ####################################################################################
-# VARIABLES
+# VARIABLES - Can be changed to customize script behavior
 ####################################################################################
 sources = [
     "https://vcdx200.uw.cz/feeds/posts/default",
@@ -15,9 +15,13 @@ sources = [
     "https://itc-bohemians.blogspot.com//feeds/posts/default"
 ]
 
-items = []
 max_items = 10000
 TITLE="Aggregated RSS feed from all uw.cz blogs"
+
+####################################################################################
+# GLOBAL VARIABLES - Do not change them
+####################################################################################
+items = []
 
 ####################################################################################
 # FUNCTIONS
@@ -29,6 +33,8 @@ def get_pubdate(entry):
         return time.strftime("%Y-%m-%d", entry.updated_parsed)
     return ""
 
+####################################################################################
+# MAIN CODE - file generation
 ####################################################################################
 
 #################################
