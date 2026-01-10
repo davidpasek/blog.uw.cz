@@ -13,6 +13,8 @@ sources = [
 ]
 
 items = []
+max_items = 1000
+
 for url in sources:
     feed = feedparser.parse(url)
     for entry in feed.entries:
@@ -27,7 +29,7 @@ fg.title("blog.uw.cz - aggregated RSS feed")
 fg.link(href="http://localhost/rss", rel="self")
 fg.description("Aggreagted RSS feed from all blog posts from uw.cz")
 
-for entry in items[:50]:
+for entry in items[:max_items]:
     fe = fg.add_entry()
     fe.title(entry.title)
     fe.link(href=entry.link)
@@ -51,10 +53,10 @@ a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
-<h1>Aggreagted RSS feed from all blog posts from uw.cz</h1>
+<h1>Aggreagted RSS feed from all uw.cz blogs</h1>
 """
 
-for entry in items[:50]:
+for entry in items[:max_items]:
     title = entry.title
     link = entry.link
     summary = getattr(entry, "summary", "")
@@ -79,3 +81,4 @@ html_content += "</body>\n</html>"
 # Uložit do HTML souboru
 with open("/usr/share/nginx/html/index.html", "w", encoding="utf-8") as f:
     f.write(html_content)
+
