@@ -39,7 +39,7 @@ def get_pubdate(entry):
 
 #################################
 # --- Get items from RSS sources ---
-#################################B
+#################################
 for base_url in sources:
     start = 1
     while True:
