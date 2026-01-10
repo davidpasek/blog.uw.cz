@@ -33,10 +33,17 @@ def get_pubdate(entry):
 #################################
 # --- Get items from RSS sources ---
 #################################B
-for url in sources:
-    feed = feedparser.parse(url)
-    for entry in feed.entries:
-        items.append(entry)
+for base_url in sources:
+    start = 1
+    while True:
+        url = f"{base_url}&start-index={start}"
+        feed = feedparser.parse(url)
+
+        if not feed.entries:
+            break
+
+        items.extend(feed.entries)
+        start += 500
 
 # Seřadit podle data publikace
 items.sort(key=lambda e: e.get("published_parsed", time.gmtime(0)), reverse=True)
@@ -99,7 +106,7 @@ for entry in items[:max_items]:
 
     summary_filtered = re.sub(r'<[^>]+>', filter_html, summary)
 
-    html_content += f'<article article_id="{article_id}">\n<h2><a href="{link}">{title}</a></h2>\n<h3>{pub_date}</h3>\n{summary_filtered}\n</article>\n'
+    html_content += f'<article data-article-id="{article_id}">\n<h2><a href="{link}">{title}</a></h2>\n<h3>{pub_date}</h3>\n{summary_filtered}\n</article>\n'
 
 html_content += "</body>\n</html>"
 
