@@ -3,6 +3,16 @@ from feedgen.feed import FeedGenerator
 import time
 import re
 
+def get_pubdate(entry):
+    if hasattr(entry, "published_parsed") and entry.published_parsed:
+        return time.strftime("%Y-%m-%d", entry.published_parsed)
+    if hasattr(entry, "updated_parsed") and entry.updated_parsed:
+        return time.strftime("%Y-%m-%d", entry.updated_parsed)
+    return ""
+
+####################################################################################
+# VARIABLES
+####################################################################################
 sources = [
     "https://vcdx200.uw.cz/feeds/posts/default",
     "https://linux.uw.cz/feeds/posts/default",
@@ -15,6 +25,10 @@ sources = [
 items = []
 max_items = 1000
 
+####################################################################################
+
+####################################################################################
+
 for url in sources:
     feed = feedparser.parse(url)
     for entry in feed.entries:
@@ -23,7 +37,9 @@ for url in sources:
 # Seřadit podle data publikace
 items.sort(key=lambda e: e.get("published_parsed", time.gmtime(0)), reverse=True)
 
-# --- Vytvoření RSS feedu ---
+#################################
+# --- Generate RSS feed ---
+#################################
 fg = FeedGenerator()
 fg.title("blog.uw.cz - aggregated RSS feed")
 fg.link(href="http://localhost/rss", rel="self")
@@ -38,7 +54,9 @@ for entry in items[:max_items]:
 
 fg.rss_file("/usr/share/nginx/html/combined.xml")
 
-# --- Generování HTML ---
+#################################
+# --- Generate HTML ---
+#################################
 html_content = """<!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -56,9 +74,12 @@ a:hover { text-decoration: underline; }
 <h1>Aggreagted RSS feed from all uw.cz blogs</h1>
 """
 
+article_id = 0
 for entry in items[:max_items]:
+    article_id += 1
     title = entry.title
     link = entry.link
+    pub_date = get_pubdate(entry)
     summary = getattr(entry, "summary", "")
 
     # Zobrazit pouze obsah před <a name="more"></a>
@@ -74,7 +95,7 @@ for entry in items[:max_items]:
 
     summary_filtered = re.sub(r'<[^>]+>', filter_html, summary)
 
-    html_content += f'<article>\n<h2><a href="{link}">{title}</a></h2>\n{summary_filtered}\n</article>\n'
+    html_content += f'<article article_id="{article_id}">\n<h2><a href="{link}">{title}</a></h2>\n<h3>{pub_date}</h3>\n{summary_filtered}\n</article>\n'
 
 html_content += "</body>\n</html>"
 
