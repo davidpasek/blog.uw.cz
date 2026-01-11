@@ -110,6 +110,8 @@ html_content = f"""<!DOCTYPE html>
 <style>
 body {{ font-family: Arial, sans-serif; max-width: 800px; margin: auto; }}
 h1 {{ text-align: center; }}
+h2 {{ text-align: center; }}
+h3 {{ text-align: center; }}
 article {{ margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #ccc; }}
 a {{ text-decoration: none; color: #0066cc; }}
 a:hover {{ text-decoration: underline; }}
@@ -117,6 +119,8 @@ a:hover {{ text-decoration: underline; }}
 </head>
 <body>
 <h1>{TITLE}</h1>
+<h3>RSS Feed: <a href="{BLOG_URL}/{OUTPUT_RSS_FILE}">{BLOG_URL}/{OUTPUT_RSS_FILE}</a></h3>
+<hr>
 """
 
 article_id = 0
@@ -124,9 +128,9 @@ for entry in items:
     article_id += 1
     title = entry.title
     link = entry.link
-    pub_date = get_pubdate(entry)
-    pub_date = (
-        f'<time datetime="{dt.isoformat()}">{dt.strftime("%Y-%m-%d")}</time>'
+    dt = get_pubdate(entry)
+    dt = (
+        f'<time datetime="{dt.isoformat()}">{dt.strftime("%A, %B %-d, %Y")}</time>'
         if dt else ""
     )
 
@@ -145,7 +149,7 @@ for entry in items:
 
     summary_filtered = re.sub(r'<[^>]+>', filter_html, summary)
 
-    html_content += f'<article data-article-id="{article_id}">\n<h2><a href="{link}">{title}</a></h2>\n<h3>{pub_date}</h3>\n{summary_filtered}\n</article>\n'
+    html_content += f'<article data-article-id="{article_id}">\n<h2><a href="{link}">{title}</a></h2>\n<h3>{dt}</h3>\n{summary_filtered}\n</article>\n'
 
 html_content += "</body>\n</html>"
 
