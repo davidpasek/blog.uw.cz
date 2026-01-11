@@ -2,6 +2,9 @@ import feedparser
 from feedgen.feed import FeedGenerator
 import time
 import re
+from datetime import datetime, timezone
+import time
+import os
 
 ####################################################################################
 # VARIABLES - Can be changed to customize script behavior
@@ -18,22 +21,39 @@ sources = [
 ]
 
 # Title to be used in generated files
-TITLE="Aggregated RSS feed from all uw.cz blogs"
+TITLE = "Aggregated RSS feed from all uw.cz blogs"
+
+# BLOG URL to be used in RSS Feed
+BLOG_URL = "https://blog.uw.cz/"
+
 
 ####################################################################################
 # GLOBAL VARIABLES - Do not change them
 ####################################################################################
 items = []
+OUTPUT_DIRECTORY = "/usr/share/nginx/html"
+OUTPUT_RSS_FILE  = "rss.xml"
+OUTPUT_HTML_FILE = "index.html"
 
 ####################################################################################
 # FUNCTIONS
 ####################################################################################
 def get_pubdate(entry):
-    if hasattr(entry, "published_parsed") and entry.published_parsed:
-        return time.strftime("%Y-%m-%d", entry.published_parsed)
-    if hasattr(entry, "updated_parsed") and entry.updated_parsed:
-        return time.strftime("%Y-%m-%d", entry.updated_parsed)
-    return ""
+    """
+    Returns publication date as UTC datetime or None
+    """
+    parsed = (
+        getattr(entry, "published_parsed", None)
+        or getattr(entry, "updated_parsed", None)
+    )
+
+    if not parsed:
+        return None
+
+    return datetime.fromtimestamp(
+        time.mktime(parsed),
+        tz=timezone.utc
+    )
 
 ####################################################################################
 # MAIN CODE - file generation
@@ -62,17 +82,22 @@ items.sort(key=lambda e: e.get("published_parsed", time.gmtime(0)), reverse=True
 #################################
 fg = FeedGenerator()
 fg.title(TITLE)
-fg.link(href="http://localhost/rss", rel="self")
-fg.description("Aggreagted RSS feed from all blog posts from uw.cz")
+fg.link(href=BLOG_URL)
+fg.description(TITLE)
 
 for entry in items:
     fe = fg.add_entry()
     fe.title(entry.title)
     fe.link(href=entry.link)
     fe.description(getattr(entry, "summary", ""))
-    fe.pubDate(entry.published if hasattr(entry, "published") else None)
+    dt = get_pubdate(entry)
+    if dt:
+        fe.pubDate(dt)
 
-fg.rss_file("/usr/share/nginx/html/combined.xml")
+# Store RSS CONTENT to RSS file
+RSS_FILE = os.path.join(OUTPUT_DIRECTORY, OUTPUT_RSS_FILE)
+print("RSS File: " + RSS_FILE)
+fg.rss_file(RSS_FILE)
 
 #################################
 # --- Generate HTML ---
@@ -100,6 +125,11 @@ for entry in items:
     title = entry.title
     link = entry.link
     pub_date = get_pubdate(entry)
+    pub_date = (
+        f'<time datetime="{dt.isoformat()}">{dt.strftime("%Y-%m-%d")}</time>'
+        if dt else ""
+    )
+
     summary = getattr(entry, "summary", "")
 
     # Zobrazit pouze obsah před <a name="more"></a>
@@ -119,6 +149,8 @@ for entry in items:
 
 html_content += "</body>\n</html>"
 
-# Uložit do HTML souboru
-with open("/usr/share/nginx/html/index.html", "w", encoding="utf-8") as f:
+# Store HTML CONTENT to HTML file
+HTML_FILE = os.path.join(OUTPUT_DIRECTORY, OUTPUT_HTML_FILE)
+print("HTML File: " + HTML_FILE)
+with open(HTML_FILE, "w", encoding="utf-8") as f:
     f.write(html_content)
