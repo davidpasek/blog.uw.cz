@@ -23,7 +23,7 @@ sources = [
 # Title to be used in generated files
 TITLE = "Aggregated RSS feed from all uw.cz blogs"
 
-# BLOG URL to be used in RSS Feed
+# BLOG URL to be used in RSS Feed (OUTPUT_RSS_FILE) and Web Page File (OUTPUT_HTML_FILE)
 BLOG_URL = "https://blog.uw.cz/"
 
 
