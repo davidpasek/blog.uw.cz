@@ -1,37 +1,62 @@
-volumes:
-  certs:
-    driver: local
- 
 networks:
   web:
     external: false
- 
-services:
-  haproxy:
-    image: haproxy:latest
-    container_name: haproxy
-    user: root 
-    networks:
-      - web
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - certs:/usr/local/etc/haproxy/certs:ro
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    restart: unless-stopped
 
+services:
   acme:
     image: neilpang/acme.sh
     container_name: acme
     networks:
       - web
     volumes:
-      - certs:/acme.sh
+      - ./certs:/acme.sh
     environment:
-      - Active24_ApiKey=${Active24_ApiKey}                    # Active24 API Key
-      - Active24_ApiSecret=${Active24_ApiSecret}            # Active24 API Secret
-    command: daemon --foreground    
+      - Active24_ApiKey=${Active24_ApiKey}
+      - Active24_ApiSecret=${Active24_ApiSecret}
+      - ZERO_SSL_EAB_EMAIL=david.pasek@gmail.com   # REQUIRED for ZeroSSL
+    command: |
+      sh -c '
+      # Set ZeroSSL as default CA
+      acme.sh --set-default-ca --server zerossl
+
+      # Register account (safe to run multiple times)
+      acme.sh --register-account -m david.pasek@gmail.com
+
+      # Issue certificate only if it does not exist
+      if [ ! -f /acme.sh/blog.uw.cz_ecc/fullchain.cer ]; then
+        acme.sh --issue --dns dns_active24 -d blog.uw.cz
+      fi
+
+      # Install certificate (idempotent)
+      acme.sh --install-cert -d blog.uw.cz --ecc \
+        --fullchain-file /acme.sh/blog.uw.cz_ecc/fullchain.cer \
+        --key-file /acme.sh/blog.uw.cz_ecc/blog.uw.cz.key \
+        --reloadcmd "kill -HUP 1"
+
+      # Create PEM certificate
+      cat /acme.sh/blog.uw.cz_ecc/blog.uw.cz.key /acme.sh/blog.uw.cz_ecc/fullchain.cer > /acme.sh/blog.uw.cz_ecc/blog.uw.cz.pem
+      chmod 600 /acme.sh/blog.uw.cz_ecc/blog.uw.cz.pem
+
+      # Run ACME Cron and Wait 24 hours for next run
+      while true; do
+        acme.sh --cron
+        sleep 86400 # Sleep 24 hours
+      done
+      '
+    restart: unless-stopped
+
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    user: root
+    networks:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/usr/local/etc/haproxy/certs:ro
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     restart: unless-stopped
 
   rss-nginx:
@@ -52,11 +77,12 @@ services:
       - ./html:/usr/share/nginx/html
       - ./feed.py:/app/feed.py
     working_dir: /app
-    command: >
-      sh -c "
-      pip install --no-cache-dir feedparser feedgen &&
+    command: |
+      sh -c '
+      pip install --no-cache-dir feedparser feedgen
       while true; do
-          python feed.py;
-          sleep 60;
+        python feed.py
+        sleep 60
       done
-      "
+      '
+
