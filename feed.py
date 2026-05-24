@@ -31,7 +31,7 @@ BLOG_URL = "https://blog.uw.cz/"
 # GLOBAL VARIABLES - Do not change them
 ####################################################################################
 items = []
-OUTPUT_DIRECTORY = "/usr/share/nginx/html"
+OUTPUT_DIRECTORY = "/usr/local/www/blog.uw.cz"
 OUTPUT_RSS_FILE  = "rss.xml"
 OUTPUT_HTML_FILE = "index.html"
 
